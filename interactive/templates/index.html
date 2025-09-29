@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAM Interactive Segmentation</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .container-custom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        /* Header */
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        
+        .header-subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+        
+        /* Main Layout */
+        .main-content {
+            padding: 40px 0;
+        }
+        
+        .sidebar {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 32px;
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+        
+        .workspace {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 32px;
+            margin-left: 32px;
+        }
+        
+        /* Form Elements */
+        .form-section {
+            margin-bottom: 32px;
+        }
+        
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-control-custom {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: #ffffff;
+        }
+        
+        .form-control-custom:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 12px 24px;
+            border: none;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        
+        .btn-primary-custom {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success-custom {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .btn-success-custom:hover:not(:disabled) {
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger-custom {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger-custom:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-custom {
+            background: transparent;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-outline-custom:hover:not(:disabled) {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* Mode Selection */
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            background: #f9fafb;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .mode-option {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .mode-option.active {
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mode-include.active {
+            color: #059669;
+        }
+        
+        .mode-exclude.active {
+            color: #dc2626;
+        }
+        
+        /* Image Container */
+        .image-container {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: crosshair;
+            position: relative;
+            background: #fafafa;
+            transition: all 0.2s ease;
+        }
+        
+        .image-container:hover {
+            border-color: #9ca3af;
+        }
+        
+        .image-container.has-image {
+            border: 2px solid #22c55e;
+            background: transparent;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            user-select: none;
+        }
+        
+        .upload-prompt {
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        .upload-prompt i {
+            font-size: 48px;
+            color: #d1d5db;
+            margin-bottom: 16px;
+        }
+        
+        .upload-prompt h3 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        
+        .upload-prompt p {
+            font-size: 16px;
+            margin: 0;
+        }
+        
+        /* Status Card */
+        .status-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+        
+        .status-message {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .status-message.success {
+            color: #059669;
+        }
+        
+        .status-message.error {
+            color: #dc2626;
+        }
+        
+        .confidence-score {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        /* Points Counter */
+        .points-counter {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            margin-top: 24px;
+        }
+        
+        .points-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+            line-height: 1;
+        }
+        
+        .points-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        /* Preview Section */
+        .preview-section {
+            display: none;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .preview-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #ffffff;
+        }
+        
+        .preview-image {
+            width: 100%;
+            max-width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 16px;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .preview-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        
+        /* Zip Download */
+        .zip-download {
+            background: #3b82f6;
+            color: white;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 24px;
+        }
+        
+        .zip-download h4 {
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .zip-download p {
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+        
+        .zip-download a {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .zip-download a:hover {
+            background: white;
+            color: #3b82f6;
+        }
+        
+        /* Mode Indicator */
+        .mode-indicator {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+        }
+        
+        .mode-indicator.include {
+            color: #059669;
+        }
+        
+        .mode-indicator.exclude {
+            color: #dc2626;
+        }
+        
+        /* Coordinates Input */
+        .coordinates-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        /* Loading States */
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container-custom {
+                padding: 0 16px;
+            }
+            
+            .workspace {
+                margin-left: 0;
+                margin-top: 24px;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+            
+            .main-content {
+                padding: 24px 0;
+            }
+        }
+        
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .mb-0 { margin-bottom: 0; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-3 { margin-top: 12px; }
+        .mt-4 { margin-top: 16px; }
+        
+        .d-flex { display: flex; }
+        .align-items-center { align-items: center; }
+        .justify-content-center { justify-content: center; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        
+        .w-100 { width: 100%; }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container-custom">
+            <h1><i class="fas fa-magic"></i> SAM Interactive Segmentation</h1>
+            <p class="header-subtitle">AI-powered image segmentation with interactive point selection</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-custom">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="sidebar">
+                        <!-- Upload Section -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-upload"></i>
+                                Upload Image
+                            </h3>
+                            <input type="file" class="form-control-custom w-100" id="imageInput" accept="image/*">
+                            <p class="mt-3" style="font-size: 14px; color: #6b7280;">
+                                <i class="fas fa-info-circle"></i>
+                                Supported: JPG, PNG, GIF (Max: 10MB)
+                            </p>
+                        </div>
+
+                        <!-- Mode Selection -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-mouse-pointer"></i>
+                                Click Mode
+                            </h3>
+                            <div class="mode-selector">
+                                <button class="mode-option mode-include active" data-mode="include">
+                                    <i class="fas fa-plus"></i>
+                                    Include
+                                </button>
+                                <button class="mode-option mode-exclude" data-mode="exclude">
+                                    <i class="fas fa-minus"></i>
+                                    Exclude
+                                </button>
+                            </div>
+                            <p class="mt-3" style="font-size: 14px; color: #6b7280;">
+                                Click on the image to add points
+                            </p>
+                        </div>
+
+                        <!-- Manual Coordinates -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-crosshairs"></i>
+                                Manual Coordinates
+                            </h3>
+                            <div class="coordinates-grid row">
+                                <input type="number" class="form-control-custom col" id="manualX" placeholder="X coordinate">
+                                <input type="number" class="form-control-custom col" id="manualY" placeholder="Y coordinate">
+                            </div>
+                            <button class="btn-custom btn-outline-custom w-100" id="addManualPoint">
+                                <i class="fas fa-plus-circle"></i>
+                                Add Point
+                            </button>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-cogs"></i>
+                                Actions
+                            </h3>
+                            <button class="btn-custom btn-success-custom w-100 mb-3" id="generateMask" disabled>
+                                <i class="fas fa-magic"></i>
+                                Generate Mask
+                                <div class="loading-spinner spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                            
+                            <div class="d-flex gap-2">
+                                <button class="btn-custom btn-outline-custom" style="flex: 1;" id="clearPoints" disabled>
+                                    <i class="fas fa-eraser"></i>
+                                    Clear
+                                </button>
+                                <button class="btn-custom btn-primary-custom" style="flex: 1;" id="saveMask" disabled>
+                                    <i class="fas fa-save"></i>
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Points Counter -->
+                        <div class="points-counter">
+                            <div class="points-number" id="pointsCounter">0</div>
+                            <div class="points-label">Active Points</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workspace -->
+                <div class="col-lg-8">
+                    <div class="workspace">
+                        <!-- Image Container -->
+                        <div class="image-container" id="imageContainer">
+                            <div class="mode-indicator include" id="modeIndicator">
+                                <i class="fas fa-plus"></i> Include Mode
+                            </div>
+                            
+                            <div class="upload-prompt" id="uploadPrompt">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h3>Upload an image to get started</h3>
+                                <p>Click the upload button or drag and drop your image here</p>
+                            </div>
+                            
+                            <img id="displayImage" style="display: none;" alt="Uploaded image">
+                        </div>
+
+                        <!-- Status Card -->
+                        <div class="status-card">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="status-message" id="statusMessage">Ready to upload image</div>
+                                    <div class="confidence-score" id="confidenceScore"></div>
+                                </div>
+                                <div class="loading-spinner spinner-border text-primary" id="loadingSpinner" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="preview-section" id="previewSection">
+                            <h3 class="section-title">
+                                <i class="fas fa-eye"></i>
+                                Results Preview
+                            </h3>
+                            
+                            <div class="preview-grid">
+                                <div class="preview-card">
+                                    <img id="maskPreview" class="preview-image" alt="Binary Mask">
+                                    <div class="preview-title">Binary Mask</div>
+                                    <div class="preview-description">Pure segmentation mask in black and white</div>
+                                    <a href="#" id="maskDownload" class="btn-custom btn-outline-custom">
+                                        <i class="fas fa-download"></i>
+                                        Download
+                                    </a>
+                                </div>
+                                
+                                <div class="preview-card">
+                                    <img id="maskedPreview" class="preview-image" alt="Masked Image">
+                                    <div class="preview-title">Masked Image</div>
+                                    <div class="preview-description">Original image with background removed</div>
+                                    <a href="#" id="maskedDownload" class="btn-custom btn-outline-custom">
+                                        <i class="fas fa-download"></i>
+                                        Download
+                                    </a>
+                                </div>
+                                
+                                <div class="preview-card">
+                                    <img id="segmentedPreview" class="preview-image" alt="Transparent PNG">
+                                    <div class="preview-title">Transparent PNG</div>
+                                    <div class="preview-description">Object with transparent background</div>
+                                    <a href="#" id="segmentedDownload" class="btn-custom btn-outline-custom">
+                                        <i class="fas fa-download"></i>
+                                        Download
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Zip Download -->
+                            <div class="zip-download">
+                                <h4><i class="fas fa-file-archive"></i> Download Complete Package</h4>
+                                <p>Get all three formats in a single ZIP file</p>
+                                <a href="#" id="zipDownload">
+                                    <i class="fas fa-download"></i>
+                                    Download ZIP Package
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        class SAMInterface {
+            constructor() {
+                this.sessionId = this.generateSessionId();
+                this.currentMode = 'include';
+                this.pointCount = 0;
+                this.imageLoaded = false;
+                
+                this.initializeEventListeners();
+                this.updateModeIndicator();
+            }
+            
+            generateSessionId() {
+                return 'session_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            initializeEventListeners() {
+                // File upload
+                document.getElementById('imageInput').addEventListener('change', (e) => {
+                    this.handleImageUpload(e);
+                });
+                
+                // Mode selection
+                document.querySelectorAll('.mode-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        // Remove active class from all options
+                        document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('active'));
+                        // Add active class to clicked option
+                        e.target.classList.add('active');
+                        
+                        this.currentMode = e.target.dataset.mode;
+                        this.updateModeIndicator();
+                    });
+                });
+                
+                // Image click handler
+                document.getElementById('displayImage').addEventListener('click', (e) => {
+                    this.handleImageClick(e);
+                });
+                
+                // Manual point addition
+                document.getElementById('addManualPoint').addEventListener('click', () => {
+                    this.addManualPoint();
+                });
+                
+                // Action buttons
+                document.getElementById('generateMask').addEventListener('click', () => {
+                    this.generateMask();
+                });
+                
+                document.getElementById('clearPoints').addEventListener('click', () => {
+                    this.clearPoints();
+                });
+                
+                document.getElementById('saveMask').addEventListener('click', () => {
+                    this.saveMask();
+                });
+            }
+            
+            updateModeIndicator() {
+                const indicator = document.getElementById('modeIndicator');
+                if (this.currentMode === 'include') {
+                    indicator.className = 'mode-indicator include';
+                    indicator.innerHTML = '<i class="fas fa-plus"></i> Include Mode';
+                } else {
+                    indicator.className = 'mode-indicator exclude';
+                    indicator.innerHTML = '<i class="fas fa-minus"></i> Exclude Mode';
+                }
+            }
+            
+            updateStatus(message, type = 'default') {
+                const statusElement = document.getElementById('statusMessage');
+                statusElement.textContent = message;
+                
+                statusElement.className = 'status-message';
+                if (type === 'error') {
+                    statusElement.classList.add('error');
+                } else if (type === 'success') {
+                    statusElement.classList.add('success');
+                }
+            }
+            
+            updatePointsCounter() {
+                document.getElementById('pointsCounter').textContent = this.pointCount;
+            }
+            
+            showLoading(show = true) {
+                document.querySelectorAll('.loading-spinner').forEach(spinner => {
+                    spinner.style.display = show ? 'inline-block' : 'none';
+                });
+            }
+            
+            async handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                this.showLoading(true);
+                this.updateStatus('Uploading and processing image...');
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.displayImage(result.image);
+                        this.updateStatus(result.message, 'success');
+                        this.imageLoaded = true;
+                        this.pointCount = 0;
+                        this.updatePointsCounter();
+                        this.updateButtonStates();
+                        this.hidePreview();
+                    } else {
+                        this.updateStatus(result.detail || 'Upload failed', 'error');
+                    }
+                } catch (error) {
+                    this.updateStatus('Upload failed: ' + error.message, 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            displayImage(base64Image) {
+                const container = document.getElementById('imageContainer');
+                const img = document.getElementById('displayImage');
+                const uploadPrompt = document.getElementById('uploadPrompt');
+                
+                img.src = base64Image;
+                img.style.display = 'block';
+                uploadPrompt.style.display = 'none';
+                container.classList.add('has-image');
+            }
+            
+            async handleImageClick(event) {
+                if (!this.imageLoaded) return;
+                
+                const rect = event.target.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // Convert to image coordinates
+                const scaleX = event.target.naturalWidth / event.target.clientWidth;
+                const scaleY = event.target.naturalHeight / event.target.clientHeight;
+                
+                const imageX = x * scaleX;
+                const imageY = y * scaleY;
+                
+                await this.addPoint(imageX, imageY);
+            }
+            
+            async addManualPoint() {
+                const x = parseFloat(document.getElementById('manualX').value);
+                const y = parseFloat(document.getElementById('manualY').value);
+                
+                if (isNaN(x) || isNaN(y)) {
+                    this.updateStatus('Please enter valid X and Y coordinates', 'error');
+                    return;
+                }
+                
+                await this.addPoint(x, y);
+                
+                // Clear inputs
+                document.getElementById('manualX').value = '';
+                document.getElementById('manualY').value = '';
+            }
+            
+            async addPoint(x, y) {
+                if (!this.imageLoaded) return;
+                
+                const label = this.currentMode === 'include' ? 1 : 0;
+                
+                const formData = new FormData();
+                formData.append('x', x.toString());
+                formData.append('y', y.toString());
+                formData.append('label', label.toString());
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/add_point', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.displayImage(result.image);
+                        this.updateStatus(result.message, 'success');
+                        this.pointCount = result.total_points;
+                        this.updatePointsCounter();
+                        this.updateButtonStates();
+                    } else {
+                        this.updateStatus(result.detail || 'Failed to add point', 'error');
+                    }
+                } catch (error) {
+                    this.updateStatus('Failed to add point: ' + error.message, 'error');
+                }
+            }
+            
+            async generateMask() {
+                if (!this.imageLoaded || this.pointCount === 0) return;
+                
+                this.showLoading(true);
+                this.updateStatus('Generating AI segmentation mask...');
+                
+                const formData = new FormData();
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/generate_mask', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.displayImage(result.image);
+                        this.updateStatus(result.message, 'success');
+                        document.getElementById('confidenceScore').textContent = 
+                            `Confidence: ${(result.confidence * 100).toFixed(1)}%`;
+                        this.updateButtonStates();
+                    } else {
+                        this.updateStatus(result.detail || 'Failed to generate mask', 'error');
+                    }
+                } catch (error) {
+                    this.updateStatus('Failed to generate mask: ' + error.message, 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            async clearPoints() {
+                if (!this.imageLoaded) return;
+                
+                const formData = new FormData();
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/clear_points', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.displayImage(result.image);
+                        this.updateStatus(result.message, 'success');
+                        this.pointCount = 0;
+                        this.updatePointsCounter();
+                        document.getElementById('confidenceScore').textContent = '';
+                        this.updateButtonStates();
+                        this.hidePreview();
+                    } else {
+                        this.updateStatus(result.detail || 'Failed to clear points', 'error');
+                    }
+                } catch (error) {
+                    this.updateStatus('Failed to clear points: ' + error.message, 'error');
+                }
+            }
+            
+            async saveMask() {
+                this.showLoading(true);
+                this.updateStatus('Saving segmentation results...');
+                
+                const formData = new FormData();
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/save_mask', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.updateStatus(result.message, 'success');
+                        this.showPreview(result.files, result.previews, result.filenames);
+                    } else {
+                        this.updateStatus(result.detail || 'Failed to save mask', 'error');
+                    }
+                } catch (error) {
+                    this.updateStatus('Failed to save mask: ' + error.message, 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            showPreview(files, previews, filenames) {
+                // Show preview section
+                const previewSection = document.getElementById('previewSection');
+                previewSection.style.display = 'block';
+                previewSection.classList.add('fade-in');
+                
+                // Set preview images
+                document.getElementById('maskPreview').src = previews.mask;
+                document.getElementById('maskedPreview').src = previews.masked;
+                document.getElementById('segmentedPreview').src = previews.segmented;
+                
+                // Set download links
+                const maskDownload = document.getElementById('maskDownload');
+                maskDownload.href = files.mask;
+                maskDownload.download = filenames.mask;
+                
+                const maskedDownload = document.getElementById('maskedDownload');
+                maskedDownload.href = files.masked;
+                maskedDownload.download = filenames.masked;
+                
+                const segmentedDownload = document.getElementById('segmentedDownload');
+                segmentedDownload.href = files.segmented;
+                segmentedDownload.download = filenames.segmented;
+                
+                const zipDownload = document.getElementById('zipDownload');
+                zipDownload.href = files.zip;
+                zipDownload.download = filenames.zip;
+                
+                // Scroll to preview
+                setTimeout(() => {
+                    previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+            
+            hidePreview() {
+                document.getElementById('previewSection').style.display = 'none';
+            }
+            
+            updateButtonStates() {
+                const generateBtn = document.getElementById('generateMask');
+                const clearBtn = document.getElementById('clearPoints');
+                const saveBtn = document.getElementById('saveMask');
+                
+                generateBtn.disabled = !this.imageLoaded || this.pointCount === 0;
+                clearBtn.disabled = !this.imageLoaded || this.pointCount === 0;
+                saveBtn.disabled = !this.imageLoaded;
+            }
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new SAMInterface();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Segmentation Web App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+        
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-area {
+            border: 3px dashed #bdc3c7;
+            border-radius: 15px;
+            padding: 60px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #f8fff9;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area i {
+            font-size: 4em;
+            color: #6c757d;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .upload-area h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+        
+        .upload-area p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .actions {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 18px 25px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            color: #495057;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #adb5bd;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background: #1e7e34;
+            border-color: #1e7e34;
+        }
+        
+        .status-summary {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .status-item {
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+        
+        .status-number {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .status-label {
+            color: #7f8c8d;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .images-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .images-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .images-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+        
+        .image-preview {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+        
+        .image-info {
+            padding: 20px;
+        }
+        
+        .image-filename {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .image-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .status-uploaded {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        
+        .status-processed {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .status-failed {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .plant-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .plant-classes {
+            font-weight: 500;
+            color: #27ae60;
+        }
+        
+        .plant-coverage {
+            font-weight: 500;
+            color: #3498db;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1001;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #dc3545;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 4px;
+            height: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: #007bff;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .results-section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+        
+        .results-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            position: relative;
+            margin: 2% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .modal-body {
+            padding: 0;
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: calc(90vh - 120px);
+            object-fit: contain;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-title {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-leaf"></i> Plant Segmentation Web App</h1>
+            <p>Upload multiple images and get detailed plant segmentation analysis</p>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Upload Multiple Images</h3>
+                <p>Click here or drag & drop multiple images (JPG, PNG, GIF)</p>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" multiple>
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions" id="actions">
+            <div class="actions-grid">
+                <button class="btn btn-primary" id="segmentBtn" disabled>
+                    <i class="fas fa-brain"></i>
+                    <span>Segment All Images</span>
+                    <div class="spinner hidden"></div>
+                </button>
+                
+                <button class="btn btn-success" id="downloadBtn" disabled>
+                    <i class="fas fa-download"></i>
+                    <span>Download Results</span>
+                    <div class="spinner hidden"></div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Status Summary -->
+        <div class="status-summary" id="statusSummary">
+            <h3>Processing Status</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-number" id="uploadedCount">0</div>
+                    <div class="status-label">Uploaded</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-number" id="processedCount">0</div>
+                    <div class="status-label">Processed</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-number" id="plantsDetected">0</div>
+                    <div class="status-label">Plants Found</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <h3><i class="fas fa-chart-bar"></i> Segmentation Results</h3>
+            <div class="images-grid" id="resultsGrid">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+        
+        <!-- Images Grid -->
+        <div class="images-grid" id="imagesGrid">
+            <!-- Images will be populated here -->
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Image Preview</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="modalImage" class="modal-image" src="" alt="Full size image">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PlantSegmentationApp {
+            constructor() {
+                this.sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+                this.images = {};
+                this.results = {};
+                this.init();
+            }
+            
+            init() {
+                // File upload
+                document.getElementById('imageInput').addEventListener('change', (e) => {
+                    this.uploadImages(e.target.files);
+                });
+                
+                // Drag & drop
+                const uploadArea = document.querySelector('.upload-area');
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    this.uploadImages(e.dataTransfer.files);
+                });
+                
+                // Action buttons
+                document.getElementById('segmentBtn').addEventListener('click', () => {
+                    this.segmentAllImages();
+                });
+                
+                document.getElementById('downloadBtn').addEventListener('click', () => {
+                    this.downloadResults();
+                });
+            }
+            
+            showNotification(message, isError = false) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${isError ? 'error' : ''} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 4000);
+            }
+            
+            showSpinner(buttonId, show = true) {
+                const btn = document.getElementById(buttonId);
+                const spinner = btn.querySelector('.spinner');
+                const text = btn.querySelector('span');
+                
+                if (spinner) {
+                    spinner.classList.toggle('hidden', !show);
+                }
+                if (text) {
+                    text.style.opacity = show ? '0.7' : '1';
+                }
+                btn.disabled = show;
+            }
+            
+            async uploadImages(files) {
+                if (!files || files.length === 0) return;
+                
+                const formData = new FormData();
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        formData.append('files', file);
+                    }
+                });
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/upload_images', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        result.images.forEach(img => {
+                            this.images[img.image_id] = img;
+                        });
+                        
+                        this.updateDisplay();
+                        this.showNotification(result.message);
+                        
+                        // Show actions and status
+                        document.getElementById('actions').style.display = 'block';
+                        document.getElementById('statusSummary').style.display = 'block';
+                    } else {
+                        this.showNotification('Upload failed', true);
+                    }
+                } catch (error) {
+                    this.showNotification('Upload error: ' + error.message, true);
+                }
+            }
+            
+            async segmentAllImages() {
+                this.showSpinner('segmentBtn', true);
+                
+                const formData = new FormData();
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/segment_all', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        result.results.forEach(res => {
+                            this.results[res.image_id] = res;
+                        });
+                        
+                        this.updateDisplay();
+                        this.showResults();
+                        this.showNotification(result.message);
+                    } else {
+                        this.showNotification('Segmentation failed', true);
+                    }
+                } catch (error) {
+                    this.showNotification('Error: ' + error.message, true);
+                } finally {
+                    this.showSpinner('segmentBtn', false);
+                }
+            }
+            
+            async downloadResults() {
+                this.showSpinner('downloadBtn', true);
+                
+                const formData = new FormData();
+                formData.append('session_id', this.sessionId);
+                
+                try {
+                    const response = await fetch('/download_results', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showNotification(result.message);
+                        
+                        // Create download link
+                        const link = document.createElement('a');
+                        link.href = result.zip_download;
+                        link.download = result.zip_download.split('/').pop();
+                        link.click();
+                        
+                    } else {
+                        this.showNotification('Download failed', true);
+                    }
+                } catch (error) {
+                    this.showNotification('Download error: ' + error.message, true);
+                } finally {
+                    this.showSpinner('downloadBtn', false);
+                }
+            }
+            
+            updateDisplay() {
+                // Update images grid
+                const grid = document.getElementById('imagesGrid');
+                grid.innerHTML = '';
+                
+                Object.values(this.images).forEach(img => {
+                    const result = this.results[img.image_id];
+                    const card = document.createElement('div');
+                    card.className = 'image-card';
+                    
+                    let statusHtml = `<span class="image-status status-${img.status}">${img.status}</span>`;
+                    let plantInfoHtml = '';
+                    
+                    if (result && result.status === 'processed') {
+                        statusHtml = `<span class="image-status status-processed">Processed</span>`;
+                        plantInfoHtml = `
+                            <div class="plant-info">
+                                <div class="plant-classes">Classes: ${result.detected_classes.length > 0 ? result.detected_classes.join(', ') : 'None detected'}</div>
+                                <div class="plant-coverage">Coverage: ${result.plant_coverage.toFixed(1)}%</div>
+                            </div>
+                        `;
+                    } else if (result && result.status === 'failed') {
+                        statusHtml = `<span class="image-status status-failed">Failed</span>`;
+                    }
+                    
+                    card.innerHTML = `
+                        <img src="${img.preview}" alt="${img.filename}" class="image-preview" onclick="openModal('${img.preview}', '${img.filename}')">
+                        <div class="image-info">
+                            <div class="image-filename">${img.filename}</div>
+                            ${statusHtml}
+                            ${plantInfoHtml}
+                        </div>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+                
+                // Update status summary
+                this.updateStatusSummary();
+                this.updateButtons();
+            }
+            
+            showResults() {
+                const resultsSection = document.getElementById('resultsSection');
+                const resultsGrid = document.getElementById('resultsGrid');
+                
+                resultsGrid.innerHTML = '';
+                
+                Object.values(this.results).forEach(result => {
+                    if (result.status === 'processed' && result.result_preview) {
+                        const card = document.createElement('div');
+                        card.className = 'image-card';
+                        
+                        card.innerHTML = `
+                            <img src="${result.result_preview}" alt="Result for ${result.filename}" class="image-preview" onclick="openModal('${result.result_preview}', '${result.filename} - Analysis')">
+                            <div class="image-info">
+                                <div class="image-filename">${result.filename} - Analysis</div>
+                                <span class="image-status status-processed">Segmentation Complete</span>
+                                <div class="plant-info">
+                                    <div class="plant-classes">Plants: ${result.detected_classes.length > 0 ? result.detected_classes.join(', ') : 'None detected'}</div>
+                                    <div class="plant-coverage">Coverage: ${result.plant_coverage.toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        resultsGrid.appendChild(card);
+                    }
+                });
+                
+                if (resultsGrid.children.length > 0) {
+                    resultsSection.style.display = 'block';
+                }
+            }
+            
+            updateStatusSummary() {
+                const uploadedCount = Object.keys(this.images).length;
+                const processedCount = Object.values(this.results).filter(r => r.status === 'processed').length;
+                const plantsDetected = Object.values(this.results).filter(r => 
+                    r.status === 'processed' && r.detected_classes && r.detected_classes.length > 0
+                ).length;
+                
+                document.getElementById('uploadedCount').textContent = uploadedCount;
+                document.getElementById('processedCount').textContent = processedCount;
+                document.getElementById('plantsDetected').textContent = plantsDetected;
+                
+                // Update progress bar
+                const progress = uploadedCount > 0 ? (processedCount / uploadedCount) * 100 : 0;
+                document.getElementById('progressFill').style.width = progress + '%';
+            }
+            
+            updateButtons() {
+                const imageCount = Object.keys(this.images).length;
+                const processedCount = Object.values(this.results).filter(r => r.status === 'processed').length;
+                
+                document.getElementById('segmentBtn').disabled = imageCount === 0;
+                document.getElementById('downloadBtn').disabled = processedCount === 0;
+            }
+        }
+        
+        // Global modal functions
+        function openModal(imageSrc, title) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            modalImage.src = imageSrc;
+            modalTitle.textContent = title;
+            modal.style.display = 'block';
+            
+            // Prevent body scrolling when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            
+            // Restore body scrolling
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside the content
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            new PlantSegmentationApp();
+        });
+    </script>
+</body>
+</html>
