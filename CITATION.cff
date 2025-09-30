@@ -13,5 +13,4 @@ authors:
 doi: 10.5281/zenodo.17237438   # Concept DOI (always resolves to the latest version)
 license: MIT
 repository-code: "https://github.com/mehran-tarif/AgriSegment"
-version: "1.0.0"
 date-released: "2025-09-30"
