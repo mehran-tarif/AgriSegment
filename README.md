@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1066343040.svg)](https://doi.org/10.5281/zenodo.17237438)
+
 # 🌱 AgriSegment
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
