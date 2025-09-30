@@ -369,10 +369,19 @@ Open an issue with:
 
 ## 📄 Citation
 
-*(coming soon)*
+Tarif, M., & Quaglia, D. (2025). AgriSegment: A Deep Learning–Based Multi-Modal Plant Segmentation Suite for Agricultural Research. University of Verona, Department of Computer Science. https://doi.org/10.5281/zenodo.17237438
 
 ```bibtex
-# Citation will be available after ICROPM 2026 publication
+@software{tarif_agrisegment,
+  author       = {Tarif, Mehran and
+                  Quaglia, Davide},
+  title        = {AgriSegment: A Deep Learning–Based Multi-Modal
+                   Plant Segmentation Suite for Agricultural Research},
+  year         = 2025,
+  publisher    = {University of Verona, Department of Computer Science},
+  doi          = {10.5281/zenodo.17237438},   % Concept DOI (always resolves to the latest version)
+  url          = {https://doi.org/10.5281/zenodo.17237438}
+}
 ```
 
 ---
